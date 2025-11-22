@@ -167,7 +167,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           webinar_id: process.env.WEBINAR_ID,
           schedule: webinarInfo.webinar.schedules[0].schedule,
           first_name: firstName,
-          last_name: `${lastName} (Discord: ${interaction.user.tag} - ${interaction.user.id})`,
+          last_name: `${lastName}`,
           email,
           phone,
           // Optional fields:
