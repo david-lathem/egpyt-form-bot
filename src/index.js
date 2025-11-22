@@ -160,13 +160,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       // Submit to FormSpark
       let submitted = false;
+      let res;
       try {
         const payload = {
           api_key: process.env.WEBINAR_API_KEY,
           webinar_id: process.env.WEBINAR_ID,
           schedule: webinarInfo.webinar.schedules[0].schedule,
           first_name: firstName,
-          last_name: lastName,
+          last_name: `${lastName} (Discord: ${interaction.user.tag} - ${interaction.user.id})`,
           email,
           phone,
           // Optional fields:
@@ -178,7 +179,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         // Encode as x-www-form-urlencoded
         const encodedPayload = qs.stringify(payload);
 
-        const res = await axios.post(
+        res = await axios.post(
           `${process.env.WEBINAR_API_BASE_URL}/register`,
           encodedPayload,
           {
@@ -212,8 +213,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
 
         await interaction.reply({
-          content:
-            "✅ Your verification form has been submitted successfully and your role has been assigned!",
+          content: `✅ Your verification form has been submitted successfully and your role has been assigned!\nJoin the webinar through [Live URL](${res.user.live_room_url}). Here's the [Replay Room URL](${res.user.replay_room_url})`,
           ephemeral: true,
         });
       } else {
