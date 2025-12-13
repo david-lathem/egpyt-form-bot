@@ -14,7 +14,6 @@ const {
   PermissionFlagsBits,
 } = require("discord.js");
 const axios = require("axios");
-const qs = require("qs");
 
 const client = new Client({
   intents: [
@@ -26,23 +25,8 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-let webinarInfo;
-
-client.once("ready", async () => {
+client.once("ready", () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
-
-  const payload = {
-    api_key: process.env.WEBINAR_API_KEY,
-    webinar_id: process.env.WEBINAR_ID,
-  };
-
-  const res = await fetch(process.env.WEBINAR_API_BASE_URL + "/webinar", {
-    method: "POST",
-    body: qs.stringify(payload),
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  });
-
-  webinarInfo = await res.json();
 });
 
 client.on(Events.MessageCreate, async (message) => {
@@ -89,18 +73,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setCustomId("verify_form")
         .setTitle("Verification Form");
 
-      const firstNameInput = new TextInputBuilder()
-        .setCustomId("first_name")
-        .setLabel("First Name")
+      const nameInput = new TextInputBuilder()
+        .setCustomId("name")
+        .setLabel("Full Name")
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder("Enter your First name")
-        .setRequired(true);
-
-      const lastNameInput = new TextInputBuilder()
-        .setCustomId("last_name")
-        .setLabel("Last Name")
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder("Enter your Last name")
+        .setPlaceholder("Enter your full name")
         .setRequired(true);
 
       const emailInput = new TextInputBuilder()
@@ -117,19 +94,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setPlaceholder("+1 234 567 890")
         .setRequired(true);
 
-      // const countryInput = new TextInputBuilder()
-      //   .setCustomId("country")
-      //   .setLabel("Country")
-      //   .setStyle(TextInputStyle.Short)
-      //   .setPlaceholder("Your country")
-      //   .setRequired(true);
+      const countryInput = new TextInputBuilder()
+        .setCustomId("country")
+        .setLabel("Country")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("Your country")
+        .setRequired(true);
 
       modal.addComponents(
-        new ActionRowBuilder().addComponents(firstNameInput),
-        new ActionRowBuilder().addComponents(lastNameInput),
+        new ActionRowBuilder().addComponents(nameInput),
         new ActionRowBuilder().addComponents(emailInput),
-        new ActionRowBuilder().addComponents(phoneInput)
-        // new ActionRowBuilder().addComponents(countryInput)
+        new ActionRowBuilder().addComponents(phoneInput),
+        new ActionRowBuilder().addComponents(countryInput)
       );
 
       await interaction.showModal(modal);
@@ -137,11 +113,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     // =========== MODAL SUBMISSION ===========
     if (interaction.isModalSubmit() && interaction.customId === "verify_form") {
-      const firstName = interaction.fields.getTextInputValue("first_name");
-      const lastName = interaction.fields.getTextInputValue("last_name");
+      const name = interaction.fields.getTextInputValue("name");
       const email = interaction.fields.getTextInputValue("email");
       const phone = interaction.fields.getTextInputValue("phone");
-      // const country = interaction.fields.getTextInputValue("country");
+      const country = interaction.fields.getTextInputValue("country");
 
       // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -153,43 +128,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      if (phone.length < 6)
-        return await interaction.reply({
-          content: "❌ Invalid Phone. Make sure its 6 chars at least.",
-          ephemeral: true,
-        });
       // Submit to FormSpark
       let submitted = false;
-      let res;
       try {
-        const payload = {
-          api_key: process.env.WEBINAR_API_KEY,
-          webinar_id: process.env.WEBINAR_ID,
-          schedule: webinarInfo.webinar.schedules[0].schedule,
-          first_name: firstName,
-          last_name: `${lastName}`,
+        const res = await axios.post(process.env.FORMSPARK_URL, {
+          name,
           email,
           phone,
-          // Optional fields:
-          // country: country,
-          // discord_user: `${interaction.user.tag} (${interaction.user.id})`,
-          // timestamp: new Date().toISOString(),
-        };
+          country,
+          discord_user: `${interaction.user.tag} (${interaction.user.id})`,
+          timestamp: new Date().toISOString(),
+        });
 
-        // Encode as x-www-form-urlencoded
-        const encodedPayload = qs.stringify(payload);
-
-        res = await axios.post(
-          `${process.env.WEBINAR_API_BASE_URL}/register`,
-          encodedPayload,
-          {
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-          }
-        );
-
-        if (res.status === 200) {
+        if (res.status === 200 || res.status === 201) {
           submitted = true;
           console.log(`✅ Form submitted for ${interaction.user.tag}`);
         } else {
@@ -197,8 +148,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
       } catch (formErr) {
         console.error(formErr);
-        console.log(formErr.response?.data);
-        console.log(formErr.response?.data?.errors);
       }
 
       // Assign role ONLY if form submission succeeded
@@ -213,7 +162,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
 
         await interaction.reply({
-          content: `✅ Your verification form has been submitted successfully and your role has been assigned!\nJoin the webinar through [Live URL](${res.user.live_room_url}). Here's the [Replay Room URL](${res.user.replay_room_url})`,
+          content:
+            "✅ Your verification form has been submitted successfully and your role has been assigned!",
           ephemeral: true,
         });
       } else {
