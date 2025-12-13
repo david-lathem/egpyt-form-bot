@@ -12,6 +12,9 @@ const {
   TextInputStyle,
   Events,
   PermissionFlagsBits,
+  LabelBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
 } = require("discord.js");
 const axios = require("axios");
 
@@ -133,9 +136,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
 
       const ecomLabel = new LabelBuilder()
-        .setLabel(
-          "If your Ecom success was guaranteed, how much would you be willing to invest in yourself?"
-        )
+        .setLabel("If your Ecom success was guaranteed")
+        .setDescription("how much would you be willing to invest in yourself?")
         .setStringSelectMenuComponent(ecomSelect);
 
       modal.addLabelComponents(
