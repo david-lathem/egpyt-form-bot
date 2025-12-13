@@ -25,7 +25,7 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-client.once("ready", () => {
+client.once("clientReady", () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
@@ -75,37 +75,75 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       const nameInput = new TextInputBuilder()
         .setCustomId("name")
-        .setLabel("Full Name")
         .setStyle(TextInputStyle.Short)
         .setPlaceholder("Enter your full name")
         .setRequired(true);
 
+      const nameLabel = new LabelBuilder()
+        .setLabel("Full Name")
+        .setTextInputComponent(nameInput);
+
       const emailInput = new TextInputBuilder()
         .setCustomId("email")
-        .setLabel("Email Address")
         .setStyle(TextInputStyle.Short)
         .setPlaceholder("example@email.com")
         .setRequired(true);
 
+      const emailLabel = new LabelBuilder()
+        .setLabel("Email Address")
+        .setTextInputComponent(emailInput);
+
       const phoneInput = new TextInputBuilder()
         .setCustomId("phone")
-        .setLabel("Phone Number")
         .setStyle(TextInputStyle.Short)
         .setPlaceholder("+1 234 567 890")
         .setRequired(true);
 
+      const phoneLabel = new LabelBuilder()
+        .setLabel("Phone Number")
+        .setTextInputComponent(phoneInput);
+
       const countryInput = new TextInputBuilder()
         .setCustomId("country")
-        .setLabel("Country")
         .setStyle(TextInputStyle.Short)
         .setPlaceholder("Your country")
         .setRequired(true);
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(nameInput),
-        new ActionRowBuilder().addComponents(emailInput),
-        new ActionRowBuilder().addComponents(phoneInput),
-        new ActionRowBuilder().addComponents(countryInput)
+      const countryLabel = new LabelBuilder()
+        .setLabel("Country")
+        .setTextInputComponent(countryInput);
+
+      const ecomSelect = new StringSelectMenuBuilder()
+        .setCustomId("ecom")
+        .setPlaceholder("Make a selection!")
+        .setRequired(true)
+        .addOptions(
+          new StringSelectMenuOptionBuilder()
+            .setLabel("$0-$500")
+            .setValue("$0-$500"),
+          new StringSelectMenuOptionBuilder()
+            .setLabel("$500-$2500")
+            .setValue("$500-$2500"),
+          new StringSelectMenuOptionBuilder()
+            .setLabel("$2500-$5000")
+            .setValue("$2500-$5000"),
+          new StringSelectMenuOptionBuilder()
+            .setLabel("$5000-$10000+")
+            .setValue("$5000-$10000+")
+        );
+
+      const ecomLabel = new LabelBuilder()
+        .setLabel(
+          "If your Ecom success was guaranteed, how much would you be willing to invest in yourself?"
+        )
+        .setStringSelectMenuComponent(ecomSelect);
+
+      modal.addLabelComponents(
+        nameLabel,
+        emailLabel,
+        phoneLabel,
+        countryLabel,
+        ecomLabel
       );
 
       await interaction.showModal(modal);
@@ -117,6 +155,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const email = interaction.fields.getTextInputValue("email");
       const phone = interaction.fields.getTextInputValue("phone");
       const country = interaction.fields.getTextInputValue("country");
+      const ecom = interaction.fields.getStringSelectValues("ecom");
 
       // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -136,6 +175,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           email,
           phone,
           country,
+          ecom,
           discord_user: `${interaction.user.tag} (${interaction.user.id})`,
           timestamp: new Date().toISOString(),
         });
