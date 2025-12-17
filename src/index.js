@@ -176,8 +176,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const response = await openaiClient.responses.create({
         model: "gpt-4.1-nano",
         instructions:
-          "I am gonna send you a word related to a country. It could be a typo, a city, a country code or anything. You tell the correct country full name so i could use in close crm lead api.Just mention name.",
-        input: country,
+          "I am gonna send you a word related to a country. It could be a typo, a city, a country code or anything. You tell the correct country (api compatible) name so i could use in close crm lead api. Just mention name",
+        input: `${country}`,
       });
 
       console.log(response.output_text);
