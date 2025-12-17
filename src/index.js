@@ -17,6 +17,7 @@ const {
   StringSelectMenuOptionBuilder,
 } = require("discord.js");
 const axios = require("axios");
+const { default: OpenAI } = require("openai");
 
 const client = new Client({
   intents: [
@@ -27,6 +28,8 @@ const client = new Client({
   ],
   partials: [Partials.Channel],
 });
+
+const openaiClient = new OpenAI({});
 
 client.once("clientReady", () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
@@ -159,15 +162,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const country = interaction.fields.getTextInputValue("country");
       const ecom = interaction.fields.getStringSelectValues("ecom");
 
+      await interaction.deferReply({ ephemeral: true });
+
       // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        return await interaction.reply({
+        return await interaction.editReply({
           content:
             "❌ Invalid email address. Please try again using a valid email format.",
-          ephemeral: true,
         });
       }
+
+      const response = await client.responses.create({
+        model: "gpt-4.1-nano",
+        instructions:
+          "I am gonna send you a word related to a country. It could be a typo, a city, a country code or anything. You tell the correct country full name so i could use in close crm lead api.Just mention name.",
+        input: country,
+      });
+
+      console.log(response.output_text);
 
       // Submit to FormSpark
       let submitted = false;
@@ -176,7 +189,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           name,
           email,
           phone,
-          country,
+          country: response.output_text,
           ecom,
           discord_user: `${interaction.user.tag} (${interaction.user.id})`,
           timestamp: new Date().toISOString(),
@@ -203,13 +216,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
           `✅ Role '${role.name}' assigned to ${interaction.user.tag}`
         );
 
-        await interaction.reply({
+        await interaction.editReply({
           content:
             "✅ Your verification form has been submitted successfully and your role has been assigned!",
           ephemeral: true,
         });
       } else {
-        await interaction.reply({
+        await interaction.editReply({
           content:
             "⚠️ Could not submit your form. Please try again later — no role has been assigned.",
           ephemeral: true,
