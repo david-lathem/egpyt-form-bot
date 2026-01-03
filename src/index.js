@@ -33,17 +33,6 @@ const client = new Client({
 const openaiClient = new OpenAI({});
 
 client.once("clientReady", () => {
-  for (const g of [...client.guilds.cache.values()]) {
-    if (g.id !== process.env.GUILD_ID) continue;
-
-    for (const ch of [
-      ...g.channels.cache
-        .filter((c) => c.type === ChannelType.GuildText)
-        .values(),
-    ])
-      console.log(ch.name, ch.id);
-  }
-
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
@@ -59,7 +48,7 @@ You’ve just joined a community built to share **real value, practical tools, a
 
 To unlock full access, please complete a quick **verification step**.
 
-👉 **Start here:** #✅｜verify  
+👉 **Start here:** <#1436722972994961478>  
 Click the **Verify** button and complete the form to unlock all channels and free value.
 
 🔒 Why we verify:
