@@ -15,6 +15,7 @@ const {
   LabelBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
+  ChannelType,
 } = require("discord.js");
 const axios = require("axios");
 const { default: OpenAI } = require("openai");
@@ -32,7 +33,16 @@ const client = new Client({
 const openaiClient = new OpenAI({});
 
 client.once("clientReady", () => {
-  console.log(client.guilds.cache.values());
+  for (const g of [...client.guilds.cache.values()]) {
+    if (g.id !== process.env.GUILD_ID) continue;
+
+    for (const ch of [
+      ...g.channels.cache
+        .filter((c) => c.type === ChannelType.GuildText)
+        .values(),
+    ])
+      console.log(ch.name, ch.id);
+  }
 
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
