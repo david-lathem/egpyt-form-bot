@@ -32,7 +32,38 @@ const client = new Client({
 const openaiClient = new OpenAI({});
 
 client.once("clientReady", () => {
+  console.log(client.guilds.cache.values());
+
   console.log(`✅ Logged in as ${client.user.tag}`);
+});
+
+client.on("guildMemberAdd", async (member) => {
+  try {
+    if (member.guild.id !== process.env.GUILD_ID) return;
+
+    await member.roles.add(process.env.UNVERIFIED_ROLE_ID);
+
+    await member.send(`👋 Welcome to **Halal Hustle** — we’re glad you’re here!
+
+You’ve just joined a community built to share **real value, practical tools, and clear guidance**.
+
+To unlock full access, please complete a quick **verification step**.
+
+👉 **Start here:** #✅｜verify  
+Click the **Verify** button and complete the form to unlock all channels and free value.
+
+🔒 Why we verify:
+This keeps the community **safe, spam-free, and focused on serious action-takers**.
+
+⚠️ Reminder: 
+Halal Hustle will **never DM you** for payments or passwords.  
+
+Once verified, head to **Watch This First** to get started smoothly 🚀  
+
+Welcome again — we’re excited to have you.`);
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 client.on(Events.MessageCreate, async (message) => {
@@ -212,6 +243,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const role = guild.roles.cache.get(process.env.VERIFY_ROLE_ID);
 
         await member.roles.add(role);
+        await member.roles.remove(process.env.UNVERIFIED_ROLE_ID);
         console.log(
           `✅ Role '${role.name}' assigned to ${interaction.user.tag}`
         );
