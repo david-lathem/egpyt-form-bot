@@ -42,24 +42,13 @@ client.on("guildMemberAdd", async (member) => {
 
     await member.roles.add(process.env.UNVERIFIED_ROLE_ID);
 
-    await member.send(`👋 Welcome to **Halal Hustle** — we’re glad you’re here!
-
-You’ve just joined a community built to share **real value, practical tools, and clear guidance**.
-
-To unlock full access, please complete a quick **verification step**.
-
-👉 **Start here:** <#1436722972994961478>  
-Click the **Verify** button and complete the form to unlock all channels and free value.
-
-🔒 Why we verify:
-This keeps the community **safe, spam-free, and focused on serious action-takers**.
-
-⚠️ Reminder: 
-Halal Hustle will **never DM you** for payments or passwords.  
-
-Once verified, head to **Watch This First** to get started smoothly 🚀  
-
-Welcome again — we’re excited to have you.`);
+    await member.send(`👋 Welcome to Halal Hustle
+🔓 Unlock full access in 30 seconds
+Complete the quick verification below.
+👉 Verify now: <#1436722972994961478>
+✅ Instant access to all channels + free value
+🔒 Verification keeps the community safe
+⚠️ We never DM for payments or passwords`);
   } catch (error) {
     console.error(error);
   }
