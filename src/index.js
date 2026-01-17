@@ -108,6 +108,7 @@ const TIME_WINDOW = 5000; // 5 seconds
 
 client.on(Events.MessageCreate, async (message) => {
   try {
+    if (message.guild?.id !== process.env.GUILD_ID) return;
     if (message.author.id === message.client.user.id) return;
     if (message.channel.id !== FREE_CHANNEL_ID) return;
 
@@ -181,7 +182,6 @@ client.on(Events.MessageCreate, async (message) => {
           "⚠️ You’ve been temporarily muted for 15 minutes due to spam or flooding.",
         )
         .catch(() => {});
-
     }
   } catch (err) {
     console.error(err);
