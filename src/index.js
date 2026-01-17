@@ -69,7 +69,7 @@ client.on(Events.MessageCreate, async (message) => {
       .setColor("#2b6df3")
       .setTitle("✅ Verify Your Account")
       .setDescription(
-        "To get verified, please fill out the form including your **Name**, **Email**, **Phone Number**, and **Country**.\n\nClick the **Verify** button below to begin."
+        "To get verified, please fill out the form including your **Name**, **Email**, **Phone Number**, and **Country**.\n\nClick the **Verify** button below to begin.",
       )
       .setFooter({ text: "Halal Ecom • Secure & Fast" })
       .setTimestamp();
@@ -85,6 +85,104 @@ client.on(Events.MessageCreate, async (message) => {
       embeds: [embed],
       components: [row],
     });
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+const WHITE_LISTED_ROLE_IDS = process.env.WHITE_LISTED_ROLE_IDS.split(",");
+const FREE_CHANNEL_ID = process.env.FREE_CHANNEL_ID;
+const LINK_REGEX =
+  /(https?:\/\/[^\s]+)|(bit\.ly\/[^\s]+)|(tinyurl\.com\/[^\s]+)|(facebook\.com\/[^\s]+)|(t\.me\/[^\s]+)/i;
+
+const BAN_REGEX =
+  /\b(dm\s*me|message\s*me|hit\s*me\s*up|contact\s*me|pm\s*me|direct\s*message\s*me|private\s*message\s*me|i\s*can\s*help|i\s*offer|my\s*service|my\s*services|my\s*agency|agency|free\s*consultation|paid\s*call|looking\s*for\s*clients|who\s*wants\s*help|i\s*sell|check\s*my|join\s*my|telegram|whatsapp|signal|crypto|forex|airdrop|nft|wallet|send\s*money|scam|scammer|fake)\b/i;
+
+const CTA_KEYWORDS = /\b(session|webinar|live|training|workshop)\b/i;
+
+const MESSAGE_CACHE = new Map(); // key: userId, value: array of messages with timestamp
+
+const MUTE_DURATION = 15 * 60 * 1000; // 15 minutes in ms
+const MAX_MESSAGES = 5; // 5 messages
+const TIME_WINDOW = 5000; // 5 seconds
+
+client.on(Events.MessageCreate, async (message) => {
+  try {
+    if (message.author.id === message.client.user.id) return;
+    if (message.channel.id !== FREE_CHANNEL_ID) return;
+
+    if (
+      message.member.roles.cache.some((r) =>
+        WHITE_LISTED_ROLE_IDS.includes(r.id),
+      )
+    )
+      return;
+
+    if (LINK_REGEX.test(message.content)) {
+      await message.delete().catch(() => {});
+
+      await message.channel.send(
+        `${message.author}, posting links is not allowed here!`,
+      );
+
+      return;
+    }
+
+    if (BAN_REGEX.test(message.content)) {
+      await message.delete().catch(() => {});
+      await message.member.ban({ reason: "Banned keyword detected" });
+
+      return;
+    }
+
+    if (CTA_KEYWORDS.test(message.content)) {
+      await message.channel.send(
+        `🚀 Join the free live session → <#${process.env.FREE_SESSION_CHANNEL_ID}`,
+      );
+    }
+
+    const now = Date.now();
+    const userId = message.author.id;
+
+    // Initialize cache for user
+    if (!MESSAGE_CACHE.has(userId)) MESSAGE_CACHE.set(userId, []);
+
+    const userMessages = MESSAGE_CACHE.get(userId);
+
+    console.log(userMessages);
+
+    // Add current message to cache
+    userMessages.push({ content: message.content, timestamp: now });
+
+    // Remove old messages outside time window
+    const recentMessages = userMessages.filter(
+      (m) => now - m.timestamp <= TIME_WINDOW,
+    );
+    MESSAGE_CACHE.set(userId, recentMessages);
+
+    // Spam checks
+    const largeMessage = message.content.length >= 300;
+    const repeatedMessage =
+      recentMessages.filter((m) => m.content === message.content).length >= 2;
+    const rapidFlood = recentMessages.length >= MAX_MESSAGES;
+
+    MESSAGE_CACHE.set(userId, []);
+
+    if (largeMessage || repeatedMessage || rapidFlood) {
+      await message.delete().catch(console.error);
+
+      // Mute member (add a muted role or use timeout API)
+      if (message.member.moderatable) {
+        await message.member.timeout(MUTE_DURATION, "Spam / Flooding detected");
+      }
+
+      await message.author
+        .send(
+          "⚠️ You’ve been temporarily muted for 15 minutes due to spam or flooding.",
+        )
+        .catch(() => {});
+
+    }
   } catch (err) {
     console.error(err);
   }
@@ -154,7 +252,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             .setValue("$2500-$5000"),
           new StringSelectMenuOptionBuilder()
             .setLabel("$5000-$10000+")
-            .setValue("$5000-$10000+")
+            .setValue("$5000-$10000+"),
         );
 
       const ecomLabel = new LabelBuilder()
@@ -167,7 +265,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         emailLabel,
         phoneLabel,
         countryLabel,
-        ecomLabel
+        ecomLabel,
       );
 
       await interaction.showModal(modal);
@@ -233,7 +331,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await member.roles.add(role);
         await member.roles.remove(process.env.UNVERIFIED_ROLE_ID);
         console.log(
-          `✅ Role '${role.name}' assigned to ${interaction.user.tag}`
+          `✅ Role '${role.name}' assigned to ${interaction.user.tag}`,
         );
 
         await interaction.editReply({
