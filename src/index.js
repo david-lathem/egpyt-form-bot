@@ -109,6 +109,8 @@ const TIME_WINDOW = 5000; // 5 seconds
 client.on(Events.MessageCreate, async (message) => {
   try {
     console.log(message.content);
+    console.log(process.env.GUILD_ID);
+    console.log(message.guildId);
 
     if (message.guildId !== process.env.GUILD_ID)
       return console.log("no guild");
