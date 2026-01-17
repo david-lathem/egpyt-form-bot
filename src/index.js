@@ -342,7 +342,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
 
         await interaction.editReply({
-          content: `✅ Success, please checkout the <#${process.env.FREE_SESSION_CHANNEL_ID}>`,
+          content: `✅ Success! Don’t miss the <#${process.env.FREE_SESSION_CHANNEL_ID}>`,
           ephemeral: true,
         });
       } else {
