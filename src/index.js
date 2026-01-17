@@ -145,7 +145,7 @@ client.on(Events.MessageCreate, async (message) => {
 
     if (CTA_KEYWORDS.test(message.content)) {
       await message.channel.send(
-        `🚀 Join the free live session → <#${process.env.FREE_SESSION_CHANNEL_ID}`,
+        `🚀 Join the free live session → <#${process.env.FREE_SESSION_CHANNEL_ID}>`,
       );
     }
 
@@ -174,9 +174,9 @@ client.on(Events.MessageCreate, async (message) => {
       recentMessages.filter((m) => m.content === message.content).length >= 2;
     const rapidFlood = recentMessages.length >= MAX_MESSAGES;
 
-    MESSAGE_CACHE.set(userId, []);
-
     if (largeMessage || repeatedMessage || rapidFlood) {
+      MESSAGE_CACHE.set(userId, []);
+
       await message.delete().catch(console.error);
 
       // Mute member (add a muted role or use timeout API)
