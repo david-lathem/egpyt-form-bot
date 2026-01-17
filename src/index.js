@@ -108,9 +108,14 @@ const TIME_WINDOW = 5000; // 5 seconds
 
 client.on(Events.MessageCreate, async (message) => {
   try {
-    if (message.guild?.id !== process.env.GUILD_ID) return;
+    console.log(message.content);
+
+    if (message.guildId !== process.env.GUILD_ID)
+      return console.log("no guild");
+
     if (message.author.id === message.client.user.id) return;
-    if (message.channel.id !== FREE_CHANNEL_ID) return;
+    if (message.channel.id !== FREE_CHANNEL_ID)
+      return console.log("no free session");
 
     if (
       message.member.roles.cache.some((r) =>
@@ -335,8 +340,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
 
         await interaction.editReply({
-          content:
-            "✅ Your verification form has been submitted successfully and your role has been assigned!",
+          content: `✅ Success, please checkout the <#${process.env.FREE_SESSION_CHANNEL_ID}>`,
           ephemeral: true,
         });
       } else {
