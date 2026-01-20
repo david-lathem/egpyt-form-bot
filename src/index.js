@@ -136,12 +136,12 @@ client.on(Events.MessageCreate, async (message) => {
       return;
     }
 
-    if (BAN_REGEX.test(message.content)) {
-      await message.delete().catch(() => {});
-      await message.member.ban({ reason: "Banned keyword detected" });
+    // if (BAN_REGEX.test(message.content)) {
+    //   await message.delete().catch(() => {});
+    //   await message.member.ban({ reason: "Banned keyword detected" });
 
-      return;
-    }
+    //   return;
+    // }
 
     if (CTA_KEYWORDS.test(message.content)) {
       await message.channel.send(
